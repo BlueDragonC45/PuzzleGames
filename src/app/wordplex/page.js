@@ -117,3 +117,11 @@ export default function WordPlex({ answer }) {
     </>
   )
 }
+
+// 35:30  Warning: Expected '!==' and instead saw '!='.  eqeqeq
+// 39:9  Warning: 'correct' is assigned a value but never used.  no-unused-vars
+// 41:28  Warning: Array.prototype.map() expects a return value from arrow function.  array-callback-return
+// 56:17  Warning: Expected '!==' and instead saw '!='.  eqeqeq
+// 86:32  Warning: Expected '!==' and instead saw '!='.  eqeqeq
+// 95:17  Warning: Assignments to the 'guesses' variable from inside React Hook useEffect will be lost after each render. To preserve the value over time, store it in a useRef Hook and keep the mutable value in the '.current' property. Otherwise, you can move this variable directly inside useEffect.  react-hooks/exhaustive-deps
+// 97:38  Warning: Array.prototype.map() expects a return value from arrow function.  array-callback-return
