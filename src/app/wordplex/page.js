@@ -1,13 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function WordPlex({ answer }) {
 
   var answerArr = [..."LILLY"];
   var [guesses, setGuesses] = useState(0);
+  var [completed, setCompleted] = useState(false);
+  var [correct, setCorrect] = useState(false);
   var [colorArray, setColorArray] = useState(Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => -1))); // -1 = Inactive, 0 = White, 1 = Gray, 2 = Green, 3 = Yellow
   var [letterArray, setLetterArray] = useState(Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => '')))
+  var refArray = Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => useRef()))
 
   const handleColorArray = (val, x, y) => {
     let copy = [...colorArray];
@@ -30,13 +33,23 @@ export default function WordPlex({ answer }) {
     });
   }
 
+  useEffect(() => {
+    if (guesses > 5) {
+      setCompleted(true);
+      return;
+    }
+    colorArray[guesses].forEach((val, i) => {
+      handleColorArray(0, guesses, i);
+    });
+  }, [guesses]);
+
   const checkAnswer = () => {
     letterArray[guesses].forEach((letter) => {
       if (!(letter && letter !== ' '))
         return;
     });
 
-    var correct;
+    var currCorrect = true;
     var yellowSet = Array(5).fill('');
     yellowSet.map((val, i) => {
       yellowSet[i] = answerArr[i];
@@ -51,7 +64,7 @@ export default function WordPlex({ answer }) {
         return;
       }
 
-      correct = false;
+      currCorrect = false;
       const index = yellowSet.indexOf(letter);
       if (index !== -1 && letterArray[guesses][index] !== answerArr[index]) {
         yellowSet[index] = ' ';
@@ -61,31 +74,35 @@ export default function WordPlex({ answer }) {
       }
     });
     setGuesses((guesses) => ++guesses);
+    setCorrect(currCorrect);
+    if (currCorrect) {
+      setCompleted(true);
+    }
   }
 
   const getInputBox = (color, x, y) => {
     var classes = '';
     switch (color) {
       case 0: //White
-        classes = 'h-20 text-5xl text-center caret-transparent border-2 focus:border-4 rounded-lg bg-gray-100';
+        classes = 'h-[9vh] w-[9vh] text-5xl text-center caret-transparent border-2 focus:border-4 rounded-lg bg-gray-100';
         break;
       case 1: //Gray
-        classes = 'h-20 text-5xl text-center caret-transparent border-2 rounded-lg bg-gray-500';
+        classes = 'h-[9vh] w-[9vh] text-5xl text-center caret-transparent border-2 rounded-lg bg-gray-500';
         break;
       case 2: //Green
-        classes = 'h-20 text-5xl text-center caret-transparent border-2 rounded-lg bg-green-500';
+        classes = 'h-[9vh] w-[9vh] text-5xl text-center caret-transparent border-2 rounded-lg bg-green-500';
         break;
       case 3: //Yellow
-        classes = 'h-20 text-5xl text-center caret-transparent border-2 rounded-lg bg-yellow-500';
+        classes = 'h-[9vh] w-[9vh] text-5xl text-center caret-transparent border-2 rounded-lg bg-yellow-500';
         break;
       default:
-        classes = 'h-20 text-5xl text-center caret-transparent border-2 rounded-lg bg-gray-100';
+        classes = 'h-[9vh] w-[9vh] text-5xl text-center caret-transparent border-2 rounded-lg bg-gray-100';
     }
 
     if (color === 0) {
-      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y}></input>
+      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y} ref={refArray[x][y]}></input>
     } else {
-      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y} readOnly={true}></input>
+      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y} ref={refArray[x][y]} readOnly={true}></input>
     }
   }
 
@@ -101,43 +118,47 @@ export default function WordPlex({ answer }) {
     } else {
       handleLetterArray(val, x, y);
     }
+
+    if (y < 4) {
+      refArray[x][y+1].current.focus();
+    } else {
+      refArray[x][y].current.blur();
+    }
   }
 
-  useEffect(() => {
-    if (guesses > 5) {
-      //reset
-      resetArrays();
-      setGuesses(0);
-      return;
-    }
-    colorArray[guesses].forEach((val, i) => {
-      handleColorArray(0, guesses, i);
-    });
-  }, [guesses]);
+  const onNextWordClick = () => {
+    setGuesses(0);
+    resetArrays();
+    //Get new word
+    setCompleted(false);
+  }
 
   return (
     <>
-      <div className="h-[12.5vh] grid grid-cols-5 border-b-2 border-black content-center gap-4 px-8">
-        <h1 className="col-start-3 h-16 text-5xl font-bold">WordPlex</h1>
+      <div className="h-[10vh] grid justify-items-center border-b-2 border-black py-4">
+        <h1 className="h-16 text-4xl font-bold">WordPlex</h1>
       </div>
-      <div className="grid grid-cols-5 content-center">
-        <div className="h-[72.5vh] col-start-2 col-span-3 grid grid-rows-6 grid-cols-5 align-content-center gap-12 p-6 bg-gray-100">
+      <div className="grid grid-cols-3 place-items-center">
+        <div className="h-[90vh] w-[65vh] grid col-start-2 grid-rows-6 grid-cols-5 justify-self-center justify-items-center gap-8 p-6 bg-gray-100">
           {colorArray.map((arr, x) =>
             arr.map((color, y) =>
               getInputBox(color, x, y)
             )
           )}
+          <div className="col-start-2 col-span-3">
+            <button className={'h-12 w-48 text-white text-2xl rounded-lg bg-black ' + (completed ? 'invisible' : '')} onClick={checkAnswer}>Submit</button>
+          </div>
         </div>
-        <button onClick={checkAnswer}>Submit</button>
+        {(completed || true) &&
+          <div className="h-[45vh] w-[8vh] lg:w-[35vh] justify-self-end lg:justify-self-center justify-items-center col-start-3 ml-12 mr-8 lg:mr-0 bg-gray-100">
+            <h1 className='text-xl font-bold p-3 mt-5'>{correct ? "Congratulations!" : "Good Try!"}</h1>
+            <p className='text-lg p-3 mt-5'>The correct answer was:</p>
+            <p className='text-lg p-3 font-bold'> {answerArr} </p>
+            <button className="h-10 w-28 text-white text-sm rounded-lg mt-5 bg-black" onClick={onNextWordClick}>Next Word</button>
+          </div>
+        }
+
       </div>
     </>
   )
 }
-
-// 35:30  Warning: Expected '!==' and instead saw '!='.  eqeqeq
-// 39:9  Warning: 'correct' is assigned a value but never used.  no-unused-vars
-// 41:28  Warning: Array.prototype.map() expects a return value from arrow function.  array-callback-return
-// 56:17  Warning: Expected '!==' and instead saw '!='.  eqeqeq
-// 86:32  Warning: Expected '!==' and instead saw '!='.  eqeqeq
-// 95:17  Warning: Assignments to the 'guesses' variable from inside React Hook useEffect will be lost after each render. To preserve the value over time, store it in a useRef Hook and keep the mutable value in the '.current' property. Otherwise, you can move this variable directly inside useEffect.  react-hooks/exhaustive-deps
-// 97:38  Warning: Array.prototype.map() expects a return value from arrow function.  array-callback-return
