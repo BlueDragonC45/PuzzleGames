@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 
 export default function WordPlex({ answer }) {
 
-  var answerArr = [..."lilly"];
+  var answerArr = [..."LILLY"];
   var [guesses, setGuesses] = useState(0);
   var [colorArray, setColorArray] = useState(Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => -1))); // -1 = Inactive, 0 = White, 1 = Gray, 2 = Green, 3 = Yellow
   var [letterArray, setLetterArray] = useState(Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => '')))
@@ -17,13 +17,13 @@ export default function WordPlex({ answer }) {
 
   const handleLetterArray = (val, x, y) => {
     let copy = [...letterArray];
-    copy[x][y] = val;
+    copy[x][y] = val.toUpperCase();
     setLetterArray(copy);
   }
 
   const resetArrays = () => {
-    letterArray.forEach((arr, x) => {
-      arr.forEach((elem, y) => {
+    letterArray.map((arr, x) => {
+      arr.map((elem, y) => {
         handleColorArray(-1, x, y);
         handleLetterArray('', x, y);
       })
@@ -32,7 +32,7 @@ export default function WordPlex({ answer }) {
 
   const checkAnswer = () => {
     letterArray[guesses].forEach((letter) => {
-      if (!(letter && letter != ' '))
+      if (!(letter && letter !== ' '))
         return;
     });
 
@@ -53,7 +53,7 @@ export default function WordPlex({ answer }) {
 
       correct = false;
       const index = yellowSet.indexOf(letter);
-      if (index != -1 && letterArray[guesses][index] !== answerArr[index]) {
+      if (index !== -1 && letterArray[guesses][index] !== answerArr[index]) {
         yellowSet[index] = ' ';
         handleColorArray(3, guesses, i);
       } else {
@@ -64,37 +64,53 @@ export default function WordPlex({ answer }) {
   }
 
   const getInputBox = (color, x, y) => {
+    var classes = '';
     switch (color) {
       case 0: //White
-        return <input className='h-20 text-5xl text-center caret-transparent border-2 focus:border-4 rounded-lg bg-gray-100' key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y}></input>
+        classes = 'h-20 text-5xl text-center caret-transparent border-2 focus:border-4 rounded-lg bg-gray-100';
+        break;
       case 1: //Gray
-        return <input className='h-20 text-5xl text-center caret-transparent border-2 rounded-lg  bg-gray-500' key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y} readOnly={true}></input>
+        classes = 'h-20 text-5xl text-center caret-transparent border-2 rounded-lg bg-gray-500';
+        break;
       case 2: //Green
-        return <input className='h-20 text-5xl text-center caret-transparent border-2 rounded-lg  bg-green-500' key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y} readOnly={true}></input>
+        classes = 'h-20 text-5xl text-center caret-transparent border-2 rounded-lg bg-green-500';
+        break;
       case 3: //Yellow
-        return <input className='h-20 text-5xl text-center caret-transparent border-2 rounded-lg  bg-yellow-500' key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y} readOnly={true}></input>
-
+        classes = 'h-20 text-5xl text-center caret-transparent border-2 rounded-lg bg-yellow-500';
+        break;
       default:
-        return <input className='h-20 text-5xl text-center caret-transparent border-2 rounded-lg  bg-gray-100' key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y} readOnly={true}></input>
+        classes = 'h-20 text-5xl text-center caret-transparent border-2 rounded-lg bg-gray-100';
+    }
+
+    if (color === 0) {
+      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y}></input>
+    } else {
+      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y} readOnly={true}></input>
     }
   }
 
   const onLetterChange = (val, x, y) => {
-    var newVal = val;
-    if (val.length > 1)
-      newVal = val.split('')[val.length - 1];
-    if (!(newVal.toUpperCase() != newVal.toLowerCase()))
-      return;
-    handleLetterArray(newVal, x, y);
+    if (val.length > 1) {
+      const oldChar = letterArray[x][y];
+      val.split('').forEach((char) => {
+        if (char && char !== ' ' && char !== oldChar && (char.toUpperCase() !== char.toLowerCase())) {
+          handleLetterArray(char, x, y);
+          return;
+        }
+      });
+    } else {
+      handleLetterArray(val, x, y);
+    }
   }
 
   useEffect(() => {
     if (guesses > 5) {
       //reset
       resetArrays();
-      guesses = 0;
+      setGuesses(0);
+      return;
     }
-    colorArray[guesses].map((val, i) => {
+    colorArray[guesses].forEach((val, i) => {
       handleColorArray(0, guesses, i);
     });
   }, [guesses]);
