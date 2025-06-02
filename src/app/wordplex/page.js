@@ -34,20 +34,37 @@ export default function WordPlex({ answer }) {
   }
 
   useEffect(() => {
-    if (guesses > 5) {
+    if (guesses > 5 || completed) {
       setCompleted(true);
       return;
+    } else {
+      refArray[guesses][0].current.focus();
     }
     colorArray[guesses].forEach((val, i) => {
       handleColorArray(0, guesses, i);
     });
   }, [guesses]);
 
+  useEffect(() => {
+    window.addEventListener("keyup", onKeyUp); // Add event listener for keydown event
+    return () => {
+      window.removeEventListener("keyup", onKeyUp); // Remove event listener on component unmount
+    };
+  }, [guesses]);
+
+  const onKeyUp = (event) => {
+    event.stopPropagation();
+    if (event.key === 'Enter') {
+      checkAnswer();
+    }
+  }
+
   const checkAnswer = () => {
-    letterArray[guesses].forEach((letter) => {
-      if (!(letter && letter !== ' '))
+    for (const letter of letterArray[guesses]) {
+      if (!letter || letter === '') {
         return;
-    });
+      }
+    }
 
     var currCorrect = true;
     var yellowSet = Array(5).fill('');
@@ -58,16 +75,19 @@ export default function WordPlex({ answer }) {
 
     letterArray[guesses].forEach((letter, i) => {
       if (letter === answerArr[i]) {
-        yellowSet[i] = ' ';
-
+        yellowSet[i] = '';
         handleColorArray(2, guesses, i);
-        return;
       }
+    });
+
+    letterArray[guesses].forEach((letter, i) => {
+      if (colorArray[guesses][i] === 2) return;
 
       currCorrect = false;
       const index = yellowSet.indexOf(letter);
-      if (index !== -1 && letterArray[guesses][index] !== answerArr[index]) {
-        yellowSet[index] = ' ';
+
+      if (index !== -1) {
+        yellowSet[index] = '';
         handleColorArray(3, guesses, i);
       } else {
         handleColorArray(1, guesses, i);
@@ -120,7 +140,7 @@ export default function WordPlex({ answer }) {
     }
 
     if (y < 4) {
-      refArray[x][y+1].current.focus();
+      refArray[x][y + 1].current.focus();
     } else {
       refArray[x][y].current.blur();
     }
@@ -149,7 +169,7 @@ export default function WordPlex({ answer }) {
             <button className={'h-12 w-48 text-white text-2xl rounded-lg bg-black ' + (completed ? 'invisible' : '')} onClick={checkAnswer}>Submit</button>
           </div>
         </div>
-        {(completed || true) &&
+        {(completed) &&
           <div className="h-[45vh] w-[8vh] lg:w-[35vh] justify-self-end lg:justify-self-center justify-items-center col-start-3 ml-12 mr-8 lg:mr-0 bg-gray-100">
             <h1 className='text-xl font-bold p-3 mt-5'>{correct ? "Congratulations!" : "Good Try!"}</h1>
             <p className='text-lg p-3 mt-5'>The correct answer was:</p>
