@@ -10,7 +10,22 @@ export default function WordPlex({ answer }) {
   var [correct, setCorrect] = useState(false);
   var [colorArray, setColorArray] = useState(Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => -1))); // -1 = Inactive, 0 = White, 1 = Gray, 2 = Green, 3 = Yellow
   var [letterArray, setLetterArray] = useState(Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => '')))
-  var refArray = Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => useRef()))
+  var inputRefs = useRef(null);
+
+  const getRefs = () => {
+    if (!inputRefs.current) {
+      // Initialize the Map on first usage.
+      inputRefs.current = new Map();
+    }
+    return inputRefs.current;
+  }
+  const setRefs = (node, x, y) => {
+    const map = getRefs();
+    map.set("Ref" + x + "/" + y, node);
+    return () => {
+      map.delete("Ref" + x + "/" + y);
+    };
+  }
 
   const handleColorArray = (val, x, y) => {
     let copy = [...colorArray];
@@ -25,8 +40,8 @@ export default function WordPlex({ answer }) {
   }
 
   const resetArrays = () => {
-    letterArray.map((arr, x) => {
-      arr.map((elem, y) => {
+    letterArray.forEach((arr, x) => {
+      arr.forEach((elem, y) => {
         handleColorArray(-1, x, y);
         handleLetterArray('', x, y);
       })
@@ -38,7 +53,7 @@ export default function WordPlex({ answer }) {
       setCompleted(true);
       return;
     } else {
-      refArray[guesses][0].current.focus();
+      getRefs().get("Ref" + guesses + "/" + 0).focus();
     }
     colorArray[guesses].forEach((val, i) => {
       handleColorArray(0, guesses, i);
@@ -68,7 +83,7 @@ export default function WordPlex({ answer }) {
 
     var currCorrect = true;
     var yellowSet = Array(5).fill('');
-    yellowSet.map((val, i) => {
+    yellowSet.forEach((val, i) => {
       yellowSet[i] = answerArr[i];
     });
 
@@ -120,9 +135,9 @@ export default function WordPlex({ answer }) {
     }
 
     if (color === 0) {
-      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y} ref={refArray[x][y]}></input>
+      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y} ref={(node) => setRefs(node, x, y)}></input>
     } else {
-      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y} ref={refArray[x][y]} readOnly={true}></input>
+      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y} ref={(node) => setRefs(node, x, y)} readOnly={true}></input>
     }
   }
 
@@ -140,9 +155,9 @@ export default function WordPlex({ answer }) {
     }
 
     if (y < 4) {
-      refArray[x][y + 1].current.focus();
+      getRefs().get("Ref" + x + "/" + (y + 1)).focus();
     } else {
-      refArray[x][y].current.blur();
+      getRefs().get("Ref" + x + "/" + y).blur();
     }
   }
 
