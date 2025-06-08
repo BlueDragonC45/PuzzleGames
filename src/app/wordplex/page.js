@@ -117,9 +117,23 @@ export default function WordPlex({ }) {
         setCompleted(true);
       }
     } else {
-      console.log("Invalid guess");
+      for (let i = 0; i < letterArray[guesses].length; i++) {
+        flashInputBoxRed(guesses, i);
+      }
     }
   }
+
+  const flashInputBoxRed = (x, y) => {
+    var node = getRefs().get("Ref" + x + "/" + y);
+    node.className = node.className += ' border-red-500';
+    setRefs(node, x, y);
+    setTimeout(() => {
+      var node = getRefs().get("Ref" + x + "/" + y);
+      node.className = node.className.replace(' border-red-500', '');
+      setRefs(node, x, y);
+    }, 500);
+  }
+
 
   const getInputBox = (color, x, y) => {
     var classes = 'h-[9vh] w-[9vh] text-5xl text-center caret-transparent border-2 rounded-lg ';
