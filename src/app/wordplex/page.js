@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react';
+import { isValidGuess, getNextAnswer } from '../../utils/WordplexHelper';
 
-export default function WordPlex({ answer }) {
+export default function WordPlex({ }) {
 
-  var answerArr = [..."LILLY"];
+  var [answerArr, setAnswerArr] = useState([]);
   var [guesses, setGuesses] = useState(0);
   var [completed, setCompleted] = useState(false);
   var [correct, setCorrect] = useState(false);
@@ -19,6 +20,7 @@ export default function WordPlex({ answer }) {
     }
     return inputRefs.current;
   }
+
   const setRefs = (node, x, y) => {
     const map = getRefs();
     map.set("Ref" + x + "/" + y, node);
@@ -49,6 +51,12 @@ export default function WordPlex({ answer }) {
   }
 
   useEffect(() => {
+    var answer = getNextAnswer().toUpperCase();
+    console.log(answer);
+    setAnswerArr(() => [...answer]);
+  }, []);
+
+  useEffect(() => {
     if (guesses > 5 || completed) {
       setCompleted(true);
       return;
@@ -75,63 +83,61 @@ export default function WordPlex({ answer }) {
   }
 
   const checkAnswer = () => {
-    for (const letter of letterArray[guesses]) {
-      if (!letter || letter === '') {
-        return;
+    if (isValidGuess(letterArray[guesses].join(""))) {
+      var currCorrect = true;
+      var yellowSet = Array(5).fill('');
+      yellowSet.forEach((val, i) => {
+        yellowSet[i] = answerArr[i];
+      });
+
+
+      letterArray[guesses].forEach((letter, i) => {
+        if (letter === answerArr[i]) {
+          yellowSet[i] = '';
+          handleColorArray(2, guesses, i);
+        }
+      });
+
+      letterArray[guesses].forEach((letter, i) => {
+        if (colorArray[guesses][i] === 2) return;
+
+        currCorrect = false;
+        const index = yellowSet.indexOf(letter);
+
+        if (index !== -1) {
+          yellowSet[index] = '';
+          handleColorArray(3, guesses, i);
+        } else {
+          handleColorArray(1, guesses, i);
+        }
+      });
+      setGuesses((guesses) => ++guesses);
+      setCorrect(currCorrect);
+      if (currCorrect) {
+        setCompleted(true);
       }
-    }
-
-    var currCorrect = true;
-    var yellowSet = Array(5).fill('');
-    yellowSet.forEach((val, i) => {
-      yellowSet[i] = answerArr[i];
-    });
-
-
-    letterArray[guesses].forEach((letter, i) => {
-      if (letter === answerArr[i]) {
-        yellowSet[i] = '';
-        handleColorArray(2, guesses, i);
-      }
-    });
-
-    letterArray[guesses].forEach((letter, i) => {
-      if (colorArray[guesses][i] === 2) return;
-
-      currCorrect = false;
-      const index = yellowSet.indexOf(letter);
-
-      if (index !== -1) {
-        yellowSet[index] = '';
-        handleColorArray(3, guesses, i);
-      } else {
-        handleColorArray(1, guesses, i);
-      }
-    });
-    setGuesses((guesses) => ++guesses);
-    setCorrect(currCorrect);
-    if (currCorrect) {
-      setCompleted(true);
+    } else {
+      console.log("Invalid guess");
     }
   }
 
   const getInputBox = (color, x, y) => {
-    var classes = '';
+    var classes = 'h-[9vh] w-[9vh] text-5xl text-center caret-transparent border-2 rounded-lg ';
     switch (color) {
       case 0: //White
-        classes = 'h-[9vh] w-[9vh] text-5xl text-center caret-transparent border-2 focus:border-4 rounded-lg bg-gray-100';
+        classes += 'bg-gray-100 focus:border-4';
         break;
       case 1: //Gray
-        classes = 'h-[9vh] w-[9vh] text-5xl text-center caret-transparent border-2 rounded-lg bg-gray-500';
+        classes += 'bg-gray-500';
         break;
       case 2: //Green
-        classes = 'h-[9vh] w-[9vh] text-5xl text-center caret-transparent border-2 rounded-lg bg-green-500';
+        classes += ' bg-green-500';
         break;
       case 3: //Yellow
-        classes = 'h-[9vh] w-[9vh] text-5xl text-center caret-transparent border-2 rounded-lg bg-yellow-500';
+        classes += ' bg-yellow-500';
         break;
       default:
-        classes = 'h-[9vh] w-[9vh] text-5xl text-center caret-transparent border-2 rounded-lg bg-gray-100';
+        classes += ' bg-gray-100';
     }
 
     if (color === 0) {
