@@ -5,7 +5,7 @@ import { isValidGuess, getNextAnswer } from '../../utils/WordplexHelper';
 
 export default function WordPlex({ }) {
 
-  var [answerArr, setAnswerArr] = useState([]);
+  var [answerArr, setAnswerArr] = useState([...getNextAnswer().toUpperCase()]);
   var [guesses, setGuesses] = useState(0);
   var [completed, setCompleted] = useState(false);
   var [correct, setCorrect] = useState(false);
@@ -15,8 +15,7 @@ export default function WordPlex({ }) {
 
   const getRefs = () => {
     if (!inputRefs.current) {
-      // Initialize the Map on first usage.
-      inputRefs.current = new Map();
+      inputRefs.current = new Map(); // Initialize the Map on first usage
     }
     return inputRefs.current;
   }
@@ -51,10 +50,8 @@ export default function WordPlex({ }) {
   }
 
   useEffect(() => {
-    var answer = getNextAnswer().toUpperCase();
-    console.log(answer);
-    setAnswerArr(() => [...answer]);
-  }, []);
+    console.log(answerArr);
+  }, [answerArr]);
 
   useEffect(() => {
     if (guesses > 5 || completed) {
@@ -69,7 +66,7 @@ export default function WordPlex({ }) {
   }, [guesses]);
 
   useEffect(() => {
-    window.addEventListener("keyup", onKeyUp); // Add event listener for keydown event
+    window.addEventListener("keyup", onKeyUp); // Add event listener for keyup event
     return () => {
       window.removeEventListener("keyup", onKeyUp); // Remove event listener on component unmount
     };
@@ -145,13 +142,13 @@ export default function WordPlex({ }) {
         classes += 'bg-gray-500';
         break;
       case 2: //Green
-        classes += ' bg-green-500';
+        classes += 'bg-green-500';
         break;
       case 3: //Yellow
-        classes += ' bg-yellow-500';
+        classes += 'bg-yellow-500';
         break;
       default:
-        classes += ' bg-gray-100';
+        classes += 'bg-gray-100';
     }
 
     if (color === 0) {
@@ -184,7 +181,7 @@ export default function WordPlex({ }) {
   const onNextWordClick = () => {
     setGuesses(0);
     resetArrays();
-    //Get new word
+    setAnswerArr(getNextAnswer().toUpperCase());
     setCompleted(false);
   }
 
