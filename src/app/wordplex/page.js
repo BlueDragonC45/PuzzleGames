@@ -12,6 +12,7 @@ export default function WordPlex({ }) {
   var [colorArray, setColorArray] = useState(Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => -1))); // -1 = Inactive, 0 = White, 1 = Gray, 2 = Green, 3 = Yellow
   var [letterArray, setLetterArray] = useState(Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => '')))
   var inputRefs = useRef(null);
+  var lastRef = useRef({});
 
   const getRefs = () => {
     if (!inputRefs.current) {
@@ -26,6 +27,10 @@ export default function WordPlex({ }) {
     return () => {
       map.delete("Ref" + x + "/" + y);
     };
+  }
+
+  const handleLastRef = (newX, newY) => {
+    lastRef.current = { x: newX, y: newY };
   }
 
   const handleColorArray = (val, x, y) => {
@@ -59,6 +64,7 @@ export default function WordPlex({ }) {
       return;
     } else {
       getRefs().get("Ref" + guesses + "/" + 0).focus();
+      handleLastRef(guesses, 0);
     }
     colorArray[guesses].forEach((val, i) => {
       handleColorArray(0, guesses, i);
@@ -76,6 +82,19 @@ export default function WordPlex({ }) {
     event.stopPropagation();
     if (event.key === 'Enter') {
       checkAnswer();
+    } else if (event.key === 'Backspace' || event.key === 'Delete') {
+      handleBackspaceKey()
+    }
+  }
+
+  const handleBackspaceKey = () => {
+    var currX = lastRef.current.x
+    var currY = lastRef.current.y
+    if (currY > 0 && currY < 5) {
+      handleLetterArray('', currX, currY);
+      getRefs().get("Ref" + currX + "/" + (currY - 1)).focus();
+      getRefs().get("Ref" + currX + "/" + currY).blur();
+      handleLastRef(currX, (currY - 1));
     }
   }
 
@@ -152,13 +171,16 @@ export default function WordPlex({ }) {
     }
 
     if (color === 0) {
-      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y} ref={(node) => setRefs(node, x, y)}></input>
+      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onClick={e => handleLastRef(x, y)} onChange={e => onLetterChange(e, e.target.value, x, y)} name={'letter' + x + y} ref={(node) => setRefs(node, x, y)}></input>
     } else {
-      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onChange={e => onLetterChange(e.target.value, x, y)} name={'letter' + x + y} ref={(node) => setRefs(node, x, y)} readOnly={true}></input>
+      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onClick={e => handleLastRef(x, y)} onChange={e => onLetterChange(e, e.target.value, x, y)} name={'letter' + x + y} ref={(node) => setRefs(node, x, y)} readOnly={true}></input>
     }
   }
 
-  const onLetterChange = (val, x, y) => {
+  const onLetterChange = (event, val, x, y) => {
+    if (y > 0 && (event.nativeEvent.inputType === 'deleteContentBackward' || event.nativeEvent.inputType === 'deleteContentForward'))
+      return;
+
     if (val.length > 1) {
       const oldChar = letterArray[x][y];
       val.split('').forEach((char) => {
@@ -172,7 +194,13 @@ export default function WordPlex({ }) {
     }
 
     if (y < 4) {
-      getRefs().get("Ref" + x + "/" + (y + 1)).focus();
+      if (letterArray[x][y] != '') {
+        getRefs().get("Ref" + x + "/" + (y + 1)).focus();
+        handleLastRef(guesses, y + 1);
+      } else {
+        getRefs().get("Ref" + x + "/" + y).focus();
+        handleLastRef(guesses, y);
+      }
     } else {
       getRefs().get("Ref" + x + "/" + y).blur();
     }
