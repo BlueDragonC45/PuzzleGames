@@ -23,9 +23,9 @@ export default function WordPlex({ }) {
 
   const setRefs = (node, x, y) => {
     const map = getRefs();
-    map.set("Ref" + x + "/" + y, node);
+    map.set('Ref' + x + '/' + y, node);
     return () => {
-      map.delete("Ref" + x + "/" + y);
+      map.delete('Ref' + x + '/' + y);
     };
   }
 
@@ -63,7 +63,7 @@ export default function WordPlex({ }) {
       setCompleted(true);
       return;
     } else {
-      getRefs().get("Ref" + guesses + "/" + 0).focus();
+      getRefs().get('Ref' + guesses + '/' + 0).focus();
       handleLastRef(guesses, 0);
     }
     colorArray[guesses].forEach((val, i) => {
@@ -72,9 +72,11 @@ export default function WordPlex({ }) {
   }, [guesses]);
 
   useEffect(() => {
-    window.addEventListener("keyup", onKeyUp); // Add event listener for keyup event
+    window.addEventListener('keyup', onKeyUp); // Add event listeners
+    window.addEventListener('keydown', onKeyDown);
     return () => {
-      window.removeEventListener("keyup", onKeyUp); // Remove event listener on component unmount
+      window.removeEventListener('keyup', onKeyUp); // Remove event listeners on component unmount
+      window.removeEventListener('keydown', onKeyDown);
     };
   }, [guesses]);
 
@@ -84,22 +86,48 @@ export default function WordPlex({ }) {
       checkAnswer();
     } else if (event.key === 'Backspace' || event.key === 'Delete') {
       handleBackspaceKey()
+    } else if (event.key === 'ArrowLeft') {
+      handleArrowKey(-1);
+    } else if (event.key === 'ArrowRight') {
+      handleArrowKey(1);
+    }
+  }
+
+  const onKeyDown = (event) => {
+    event.stopPropagation();
+    if (event.key === 'Tab') {
+      if (lastRef.current.y < 5) {
+        handleLastRef(lastRef.current.x, (lastRef.current.y + 1));        
+      }
     }
   }
 
   const handleBackspaceKey = () => {
     var currX = lastRef.current.x
     var currY = lastRef.current.y
-    if (currY > 0 && currY < 5) {
+    if (letterArray[currX][currY] === '') {
+      if (currY > 0 && currY < 5) {
+        handleLetterArray('', currX, currY);
+        getRefs().get('Ref' + currX + '/' + (currY - 1)).focus();
+        handleLastRef(currX, (currY - 1));
+      }
+    } else {
       handleLetterArray('', currX, currY);
-      getRefs().get("Ref" + currX + "/" + (currY - 1)).focus();
-      getRefs().get("Ref" + currX + "/" + currY).blur();
-      handleLastRef(currX, (currY - 1));
+    }
+  }
+
+  const handleArrowKey = (dir) => {
+    var currX = lastRef.current.x
+    var currY = lastRef.current.y
+    var newY = currY + dir;
+    if (newY >= 0 && newY < 5) {
+      getRefs().get('Ref' + currX + '/' + newY).focus();
+      handleLastRef(currX, newY);
     }
   }
 
   const checkAnswer = () => {
-    if (isValidGuess(letterArray[guesses].join(""))) {
+    if (isValidGuess(letterArray[guesses].join(''))) {
       var currCorrect = true;
       var yellowSet = Array(5).fill('');
       yellowSet.forEach((val, i) => {
@@ -140,11 +168,11 @@ export default function WordPlex({ }) {
   }
 
   const flashInputBoxRed = (x, y) => {
-    var node = getRefs().get("Ref" + x + "/" + y);
+    var node = getRefs().get('Ref' + x + '/' + y);
     node.className = node.className += ' border-red-500';
     setRefs(node, x, y);
     setTimeout(() => {
-      var node = getRefs().get("Ref" + x + "/" + y);
+      var node = getRefs().get('Ref' + x + '/' + y);
       node.className = node.className.replace(' border-red-500', '');
       setRefs(node, x, y);
     }, 500);
@@ -195,14 +223,12 @@ export default function WordPlex({ }) {
 
     if (y < 4) {
       if (letterArray[x][y] != '') {
-        getRefs().get("Ref" + x + "/" + (y + 1)).focus();
+        getRefs().get('Ref' + x + '/' + (y + 1)).focus();
         handleLastRef(guesses, y + 1);
       } else {
-        getRefs().get("Ref" + x + "/" + y).focus();
+        getRefs().get('Ref' + x + '/' + y).focus();
         handleLastRef(guesses, y);
       }
-    } else {
-      getRefs().get("Ref" + x + "/" + y).blur();
     }
   }
 
@@ -215,26 +241,26 @@ export default function WordPlex({ }) {
 
   return (
     <>
-      <div className="h-[10vh] grid justify-items-center border-b-2 border-black py-4">
-        <h1 className="h-16 text-4xl font-bold">WordPlex</h1>
+      <div className='h-[10vh] grid justify-items-center border-b-2 border-black py-4'>
+        <h1 className='h-16 text-4xl font-bold'>WordPlex</h1>
       </div>
-      <div className="grid grid-cols-3 place-items-center">
-        <div className="h-[90vh] w-[65vh] grid col-start-2 grid-rows-6 grid-cols-5 justify-self-center justify-items-center gap-8 p-6 bg-gray-100">
+      <div className='grid grid-cols-3 place-items-center'>
+        <div className='h-[90vh] w-[65vh] grid col-start-2 grid-rows-6 grid-cols-5 justify-self-center justify-items-center gap-8 p-6 bg-gray-100'>
           {colorArray.map((arr, x) =>
             arr.map((color, y) =>
               getInputBox(color, x, y)
             )
           )}
-          <div className="col-start-2 col-span-3">
+          <div className='col-start-2 col-span-3'>
             <button className={'h-12 w-48 text-white text-2xl rounded-lg bg-black ' + (completed ? 'invisible' : '')} onClick={checkAnswer}>Submit</button>
           </div>
         </div>
         {(completed) &&
-          <div className="h-[45vh] w-[8vh] lg:w-[35vh] justify-self-end lg:justify-self-center justify-items-center col-start-3 ml-12 mr-8 lg:mr-0 bg-gray-100">
-            <h1 className='text-xl font-bold p-3 mt-5'>{correct ? "Congratulations!" : "Good Try!"}</h1>
+          <div className='h-[45vh] w-[8vh] lg:w-[35vh] justify-self-end lg:justify-self-center justify-items-center col-start-3 ml-12 mr-8 lg:mr-0 bg-gray-100'>
+            <h1 className='text-xl font-bold p-3 mt-5'>{correct ? 'Congratulations!' : 'Good Try!'}</h1>
             <p className='text-lg p-3 mt-5'>The correct answer was:</p>
             <p className='text-lg p-3 font-bold'> {answerArr} </p>
-            <button className="h-10 w-28 text-white text-sm rounded-lg mt-5 bg-black" onClick={onNextWordClick}>Next Word</button>
+            <button className='h-10 w-28 text-white text-sm rounded-lg mt-5 bg-black' onClick={onNextWordClick}>Next Word</button>
           </div>
         }
 
