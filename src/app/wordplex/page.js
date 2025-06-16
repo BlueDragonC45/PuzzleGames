@@ -10,7 +10,9 @@ export default function WordPlex({ }) {
   var [completed, setCompleted] = useState(false);
   var [correct, setCorrect] = useState(false);
   var [colorArray, setColorArray] = useState(Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => -1))); // -1 = Inactive, 0 = White, 1 = Gray, 2 = Green, 3 = Yellow
-  var [letterArray, setLetterArray] = useState(Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => '')))
+  var [letterArray, setLetterArray] = useState(Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => '')));
+  var alphabetArray = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+  var [letterButtonColorArray, setLetterButtonColorArray] = useState(Array.from({ length: 26 }, () => 0));
   var inputRefs = useRef(null);
   var lastRef = useRef({});
 
@@ -45,6 +47,15 @@ export default function WordPlex({ }) {
     setLetterArray(copy);
   }
 
+  const handleLetterButtonColorArray = (val, letters) => {
+    let copy = [...letterButtonColorArray];
+    val.forEach((elem, i) => {
+      copy[alphabetArray.indexOf(letters[i])] = elem;
+    })
+
+    setLetterButtonColorArray(copy);
+  }
+
   const resetArrays = () => {
     letterArray.forEach((arr, x) => {
       arr.forEach((elem, y) => {
@@ -52,6 +63,7 @@ export default function WordPlex({ }) {
         handleLetterArray('', x, y);
       })
     });
+    setLetterButtonColorArray(Array.from({ length: 26 }, () => 0));
   }
 
   useEffect(() => {
@@ -97,7 +109,7 @@ export default function WordPlex({ }) {
     event.stopPropagation();
     if (event.key === 'Tab') {
       if (lastRef.current.y < 5) {
-        handleLastRef(lastRef.current.x, (lastRef.current.y + 1));        
+        handleLastRef(lastRef.current.x, (lastRef.current.y + 1));
       }
     }
   }
@@ -155,6 +167,7 @@ export default function WordPlex({ }) {
           handleColorArray(1, guesses, i);
         }
       });
+      handleLetterButtonColorArray(colorArray[guesses], letterArray[guesses]);
       setGuesses((guesses) => ++guesses);
       setCorrect(currCorrect);
       if (currCorrect) {
@@ -205,6 +218,28 @@ export default function WordPlex({ }) {
     }
   }
 
+  const getLetterButton = (color, letter) => {
+    var classes = 'h-[5vh] w-[5vh] text-2xl text-center place-self-center border-2 rounded-md mx-2 my-1 ';
+    switch (color) {
+      case 0: //White
+        classes += 'bg-gray-100';
+        break;
+      case 1: //Gray
+        classes += 'bg-gray-500';
+        break;
+      case 2: //Green
+        classes += 'bg-green-500';
+        break;
+      case 3: //Yellow
+        classes += 'bg-yellow-500';
+        break;
+      default:
+        classes += 'bg-gray-100';
+    }
+
+    return <button className={classes} key={letter} onClick={e => onLetterChange(e, letter, lastRef.current.x, lastRef.current.y)}>{letter}</button>
+  }
+
   const onLetterChange = (event, val, x, y) => {
     if (y > 0 && (event.nativeEvent.inputType === 'deleteContentBackward' || event.nativeEvent.inputType === 'deleteContentForward'))
       return;
@@ -245,6 +280,11 @@ export default function WordPlex({ }) {
         <h1 className='h-16 text-4xl font-bold'>WordPlex</h1>
       </div>
       <div className='grid grid-cols-3 place-items-center'>
+        <div className='h-[50vh] w-[8vh] lg:w-[35vh] flex flex-wrap justify-self-end lg:justify-self-center place-content-center col-start-1 mr-12 ml-8 lg:ml-0 bg-gray-100'>
+          {alphabetArray.map((letter, i) =>
+            getLetterButton(letterButtonColorArray[i], letter)
+          )}
+        </div>
         <div className='h-[90vh] w-[65vh] grid col-start-2 grid-rows-6 grid-cols-5 justify-self-center justify-items-center gap-8 p-6 bg-gray-100'>
           {colorArray.map((arr, x) =>
             arr.map((color, y) =>
@@ -256,14 +296,13 @@ export default function WordPlex({ }) {
           </div>
         </div>
         {(completed) &&
-          <div className='h-[45vh] w-[8vh] lg:w-[35vh] justify-self-end lg:justify-self-center justify-items-center col-start-3 ml-12 mr-8 lg:mr-0 bg-gray-100'>
+          <div className='h-[50vh] w-[8vh] lg:w-[35vh] justify-self-end lg:justify-self-center justify-items-center col-start-3 ml-12 mr-8 lg:mr-0 bg-gray-100'>
             <h1 className='text-xl font-bold p-3 mt-5'>{correct ? 'Congratulations!' : 'Good Try!'}</h1>
             <p className='text-lg p-3 mt-5'>The correct answer was:</p>
             <p className='text-lg p-3 font-bold'> {answerArr} </p>
             <button className='h-10 w-28 text-white text-sm rounded-lg mt-5 bg-black' onClick={onNextWordClick}>Next Word</button>
           </div>
         }
-
       </div>
     </>
   )
