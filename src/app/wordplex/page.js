@@ -50,7 +50,10 @@ export default function WordPlex({ }) {
   const handleLetterButtonColorArray = (val, letters) => {
     let copy = [...letterButtonColorArray];
     val.forEach((elem, i) => {
-      copy[alphabetArray.indexOf(letters[i])] = elem;
+      var letterIndex = alphabetArray.indexOf(letters[i])
+      if (copy[letterIndex] === 0 || (copy[letterIndex] === 3 && elem === 2)) {
+        copy[letterIndex] = elem;
+      }
     })
 
     setLetterButtonColorArray(copy);
