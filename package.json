@@ -1,6 +1,7 @@
 {
   "name": "puzzlegames",
   "version": "0.1.1",
+  "type": "module",
   "homepage": "https://BlueDragonC45.github.io/PuzzleGames",
   "private": true,
   "dependencies": {
