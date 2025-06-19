@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { isValidGuess, getNextAnswer } from '../../utils/WordplexHelper';
 
-export default function WordPlex({ }) {
+export default function WordPlex() {
 
   var [answerArr, setAnswerArr] = useState([...getNextAnswer().toUpperCase()]);
   var [guesses, setGuesses] = useState(0);
@@ -260,7 +260,7 @@ export default function WordPlex({ }) {
     }
 
     if (y < 4) {
-      if (letterArray[x][y] != '') {
+      if (letterArray[x][y] !== '') {
         if (focus)
           getRefs().get('Ref' + x + '/' + (y + 1)).focus();
         handleLastRef(guesses, y + 1);
