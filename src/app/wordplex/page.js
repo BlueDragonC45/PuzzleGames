@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { isValidGuess, getNextAnswer } from '../../utils/WordplexHelper';
 
-export default function WordPlex({ }) {
+export default function WordPlex() {
 
   var [answerArr, setAnswerArr] = useState([...getNextAnswer().toUpperCase()]);
   var [guesses, setGuesses] = useState(0);
@@ -50,7 +50,10 @@ export default function WordPlex({ }) {
   const handleLetterButtonColorArray = (val, letters) => {
     let copy = [...letterButtonColorArray];
     val.forEach((elem, i) => {
-      copy[alphabetArray.indexOf(letters[i])] = elem;
+      var letterIndex = alphabetArray.indexOf(letters[i])
+      if (copy[letterIndex] === 0 || (copy[letterIndex] === 3 && elem === 2)) {
+        copy[letterIndex] = elem;
+      }
     })
 
     setLetterButtonColorArray(copy);
@@ -193,7 +196,7 @@ export default function WordPlex({ }) {
 
 
   const getInputBox = (color, x, y) => {
-    var classes = 'h-[9vh] w-[9vh] text-5xl text-center caret-transparent border-2 rounded-lg ';
+    var classes = 'h-[6vh] w-[6vh] lg:h-[9vh] lg:w-[9vh] text-3xl lg:text-5xl text-center caret-transparent border-2 rounded-lg ';
     switch (color) {
       case 0: //White
         classes += 'bg-gray-100 focus:border-4';
@@ -212,14 +215,14 @@ export default function WordPlex({ }) {
     }
 
     if (color === 0) {
-      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onClick={e => handleLastRef(x, y)} onChange={e => onLetterChange(e, e.target.value, x, y)} name={'letter' + x + y} ref={(node) => setRefs(node, x, y)}></input>
+      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} inputMode={'none'} onClick={e => handleLastRef(x, y)} onChange={e => onLetterChange(e, e.target.value, x, y, true)} name={'letter' + x + y} ref={(node) => setRefs(node, x, y)}></input>
     } else {
-      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} onClick={e => handleLastRef(x, y)} onChange={e => onLetterChange(e, e.target.value, x, y)} name={'letter' + x + y} ref={(node) => setRefs(node, x, y)} readOnly={true}></input>
+      return <input className={classes} key={'letter' + x + y} value={letterArray[x][y].toUpperCase()} inputMode={'none'} onClick={e => handleLastRef(x, y)} onChange={e => onLetterChange(e, e.target.value, x, y, true)} name={'letter' + x + y} ref={(node) => setRefs(node, x, y)} readOnly={true}></input>
     }
   }
 
   const getLetterButton = (color, letter) => {
-    var classes = 'h-[5vh] w-[5vh] text-2xl text-center place-self-center border-2 rounded-md mx-2 my-1 ';
+    var classes = 'h-[3.5vh] w-[3.5vh] lg:h-[5vh] lg:w-[5vh] text-lg lg:text-2xl text-center place-self-center border lg:border-2 rounded-md mx-1 lg:mx-2 my-1 ';
     switch (color) {
       case 0: //White
         classes += 'bg-gray-100';
@@ -237,10 +240,10 @@ export default function WordPlex({ }) {
         classes += 'bg-gray-100';
     }
 
-    return <button className={classes} key={letter} onClick={e => onLetterChange(e, letter, lastRef.current.x, lastRef.current.y)}>{letter}</button>
+    return <button className={classes} key={letter} onClick={e => onLetterChange(e, letter, lastRef.current.x, lastRef.current.y, false)}>{letter}</button>
   }
 
-  const onLetterChange = (event, val, x, y) => {
+  const onLetterChange = (event, val, x, y, focus) => {
     if (y > 0 && (event.nativeEvent.inputType === 'deleteContentBackward' || event.nativeEvent.inputType === 'deleteContentForward'))
       return;
 
@@ -257,11 +260,13 @@ export default function WordPlex({ }) {
     }
 
     if (y < 4) {
-      if (letterArray[x][y] != '') {
-        getRefs().get('Ref' + x + '/' + (y + 1)).focus();
+      if (letterArray[x][y] !== '') {
+        if (focus)
+          getRefs().get('Ref' + x + '/' + (y + 1)).focus();
         handleLastRef(guesses, y + 1);
       } else {
-        getRefs().get('Ref' + x + '/' + y).focus();
+        if (focus)
+          getRefs().get('Ref' + x + '/' + y).focus();
         handleLastRef(guesses, y);
       }
     }
@@ -275,35 +280,39 @@ export default function WordPlex({ }) {
   }
 
   return (
-    <>
+    <div className='w-[100vw]'>
       <div className='h-[10vh] grid justify-items-center border-b-2 border-black py-4'>
         <h1 className='h-16 text-4xl font-bold'>WordPlex</h1>
       </div>
       <div className='grid grid-cols-3 place-items-center'>
-        <div className='h-[50vh] w-[8vh] lg:w-[35vh] flex flex-wrap justify-self-end lg:justify-self-center place-content-center col-start-1 mr-12 ml-8 lg:ml-0 bg-gray-100'>
-          {alphabetArray.map((letter, i) =>
-            getLetterButton(letterButtonColorArray[i], letter)
-          )}
-        </div>
-        <div className='h-[90vh] w-[65vh] grid col-start-2 grid-rows-6 grid-cols-5 justify-self-center justify-items-center gap-8 p-6 bg-gray-100'>
+        {/* Main play area */}
+        <div className={'w-[42.5vh] lg:h-[90vh] lg:w-[65vh] grid grid-rows-6 grid-cols-5 col-start-2 justify-self-center justify-items-center gap-8 p-6 bg-gray-100 ' + (completed ? 'h-[49.5vh]' : 'h-[60vh]')}>
           {colorArray.map((arr, x) =>
             arr.map((color, y) =>
               getInputBox(color, x, y)
             )
           )}
-          <div className='col-start-2 col-span-3'>
-            <button className={'h-12 w-48 text-white text-2xl rounded-lg bg-black ' + (completed ? 'invisible' : '')} onClick={checkAnswer}>Submit</button>
+          <div className={'col-start-2 col-span-3 ' + (completed ? 'hidden lg:block lg:invisible' : '')}>
+            <button className={'h-[7vh] w-[28vh] text-white text-2xl rounded-lg bg-black ' + (completed ? '' : '')} onClick={checkAnswer}>Submit</button>
           </div>
         </div>
+        {/* Letter buttons */}
+        <div className={'h-[15vh] w-[42.5vh] lg:h-[50vh] lg:w-[8vh] lg:w-[35vh] flex flex-wrap col-start-2 lg:col-start-1 lg:order-first justify-self-center place-content-center mt-2 lg:mr-8 bg-gray-100 ' + (completed ? 'hidden lg:flex' : '')}>
+          {alphabetArray.map((letter, i) =>
+            getLetterButton(letterButtonColorArray[i], letter)
+          )}
+          <button className='h-[3.5vh] w-[3.5vh] lg:h-[5vh] lg:w-[5vh] text-2xl font-bold lg:text-2xl text-center place-self-center border lg:border-2 rounded-md mx-1 lg:mx-2 my-1' onClick={checkAnswer}>{'\u23CE'}</button>
+        </div>
+        {/* Next word panel */}
         {(completed) &&
-          <div className='h-[50vh] w-[8vh] lg:w-[35vh] justify-self-end lg:justify-self-center justify-items-center col-start-3 ml-12 mr-8 lg:mr-0 bg-gray-100'>
-            <h1 className='text-xl font-bold p-3 mt-5'>{correct ? 'Congratulations!' : 'Good Try!'}</h1>
-            <p className='text-lg p-3 mt-5'>The correct answer was:</p>
-            <p className='text-lg p-3 font-bold'> {answerArr} </p>
-            <button className='h-10 w-28 text-white text-sm rounded-lg mt-5 bg-black' onClick={onNextWordClick}>Next Word</button>
+          <div className='h-[25.5vh] w-[42.5vh] lg:h-[50vh] lg:w-[35vh] col-start-2 lg:col-start-3 justify-self-center justify-items-center mt-2 lg:ml-8 bg-gray-100'>
+            <h1 className='text-xl font-bold p-2 lg:p-3 mt-5'>{correct ? 'Congratulations!' : 'Good Try!'}</h1>
+            <p className='text-lg lg:p-3 lg:mt-5'>The correct answer was:</p>
+            <p className='text-lg lg:p-3 font-bold'> {answerArr} </p>
+            <button className='h-[5vh] w-[16vh] text-white text-lg lg:text-sm rounded-lg mt-3 lg:mt-6 bg-black' onClick={onNextWordClick}>Next Word</button>
           </div>
         }
       </div>
-    </>
+    </div>
   )
 }
