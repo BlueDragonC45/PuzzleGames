@@ -12,6 +12,8 @@ export default function WordPlex() {
   var [colorArray, setColorArray] = useState(Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => -1))); // -1 = Inactive, 0 = White, 1 = Gray, 2 = Green, 3 = Yellow
   var [letterArray, setLetterArray] = useState(Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => '')));
   var alphabetArray = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+  var qwertyArray = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N', 'M'];
+  var [windowWidth, setWindowWidth] = useState(0);
   var [letterButtonColorArray, setLetterButtonColorArray] = useState(Array.from({ length: 26 }, () => 0));
   var inputRefs = useRef(null);
   var lastRef = useRef({});
@@ -68,6 +70,16 @@ export default function WordPlex() {
     });
     setLetterButtonColorArray(Array.from({ length: 26 }, () => 0));
   }
+
+  useEffect(() => {
+    function handleResize() {
+      setWindowWidth(window.innerWidth);
+    }
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     console.log(answerArr);
@@ -222,7 +234,7 @@ export default function WordPlex() {
   }
 
   const getLetterButton = (color, letter) => {
-    var classes = 'h-[3.5vh] w-[3.5vh] lg:h-[5vh] lg:w-[5vh] text-lg lg:text-2xl text-center place-self-center border lg:border-2 rounded-md mx-1 lg:mx-2 my-1 ';
+    var classes = 'h-[3.5vh] w-[3.5vh] lg:h-[5vh] lg:w-[5vh] text-md lg:text-2xl font-semibold text-center place-self-center border lg:border-2 rounded-md mx-1 lg:mx-2 my-1 ';
     switch (color) {
       case 0: //White
         classes += 'bg-gray-100';
@@ -286,7 +298,7 @@ export default function WordPlex() {
       </div>
       <div className='grid grid-cols-3 place-items-center'>
         {/* Main play area */}
-        <div className={'w-[42.5vh] lg:h-[90vh] lg:w-[65vh] grid grid-rows-6 grid-cols-5 col-start-2 justify-self-center justify-items-center gap-8 p-6 bg-gray-100 ' + (completed ? 'h-[49.5vh]' : 'h-[60vh]')}>
+        <div className={'w-[44vh] lg:h-[90vh] lg:w-[65vh] grid grid-rows-6 grid-cols-5 col-start-2 justify-self-center justify-items-center gap-8 p-6 bg-gray-100 ' + (completed ? 'h-[49.5vh]' : 'h-[60vh]')}>
           {colorArray.map((arr, x) =>
             arr.map((color, y) =>
               getInputBox(color, x, y)
@@ -297,11 +309,15 @@ export default function WordPlex() {
           </div>
         </div>
         {/* Letter buttons */}
-        <div className={'h-[15vh] w-[42.5vh] lg:h-[50vh] lg:w-[8vh] lg:w-[35vh] flex flex-wrap col-start-2 lg:col-start-1 lg:order-first justify-self-center place-content-center mt-2 lg:mr-8 bg-gray-100 ' + (completed ? 'hidden lg:flex' : '')}>
-          {alphabetArray.map((letter, i) =>
-            getLetterButton(letterButtonColorArray[i], letter)
-          )}
-          <button className='h-[3.5vh] w-[3.5vh] lg:h-[5vh] lg:w-[5vh] text-2xl font-bold lg:text-2xl text-center place-self-center border lg:border-2 rounded-md mx-1 lg:mx-2 my-1' onClick={checkAnswer}>{'\u23CE'}</button>
+        <div className={'h-[15vh] w-[44vh] lg:h-[50vh] lg:w-[8vh] lg:w-[35vh] flex flex-wrap col-start-2 lg:col-start-1 lg:order-first justify-self-center place-content-center mt-2 lg:mr-8 bg-gray-100 ' + (completed ? 'hidden lg:flex' : '')}>
+          {(windowWidth > 1023) ? (
+              alphabetArray.map((letter, i) =>
+                getLetterButton(letterButtonColorArray[i], letter)
+              )) : (
+              qwertyArray.map((letter, i) =>
+                getLetterButton(letterButtonColorArray[i], letter)
+              ))}
+          <button className='h-[3.5vh] w-[3.5vh] lg:h-[5vh] lg:w-[5vh] text-md lg:text-xl  text-center place-self-center border lg:border-2 rounded-md mx-1 lg:mx-2 my-1' onClick={handleBackspaceKey}>{'\u232B'}</button>
         </div>
         {/* Next word panel */}
         {(completed) &&
