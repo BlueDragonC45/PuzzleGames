@@ -52,7 +52,12 @@ export default function WordPlex() {
   const handleLetterButtonColorArray = (val, letters) => {
     let copy = [...letterButtonColorArray];
     val.forEach((elem, i) => {
-      var letterIndex = alphabetArray.indexOf(letters[i])
+      var letterIndex;
+      if (windowWidth > 1023) {
+        letterIndex = alphabetArray.indexOf(letters[i])
+      } else {
+        letterIndex = qwertyArray.indexOf(letters[i])
+      }
       if (copy[letterIndex] === 0 || (copy[letterIndex] === 3 && elem === 2)) {
         copy[letterIndex] = elem;
       }
@@ -311,12 +316,12 @@ export default function WordPlex() {
         {/* Letter buttons */}
         <div className={'h-[15vh] w-[44vh] lg:h-[50vh] lg:w-[8vh] lg:w-[35vh] flex flex-wrap col-start-2 lg:col-start-1 lg:order-first justify-self-center place-content-center mt-2 lg:mr-8 bg-gray-100 ' + (completed ? 'hidden lg:flex' : '')}>
           {(windowWidth > 1023) ? (
-              alphabetArray.map((letter, i) =>
-                getLetterButton(letterButtonColorArray[i], letter)
-              )) : (
-              qwertyArray.map((letter, i) =>
-                getLetterButton(letterButtonColorArray[i], letter)
-              ))}
+            alphabetArray.map((letter, i) =>
+              getLetterButton(letterButtonColorArray[i], letter)
+            )) : (
+            qwertyArray.map((letter, i) =>
+              getLetterButton(letterButtonColorArray[i], letter)
+            ))}
           <button className='h-[3.5vh] w-[3.5vh] lg:h-[5vh] lg:w-[5vh] text-md lg:text-xl  text-center place-self-center border lg:border-2 rounded-md mx-1 lg:mx-2 my-1' onClick={handleBackspaceKey}>{'\u232B'}</button>
         </div>
         {/* Next word panel */}
@@ -325,7 +330,9 @@ export default function WordPlex() {
             <h1 className='text-xl font-bold p-2 lg:p-3 mt-5'>{correct ? 'Congratulations!' : 'Good Try!'}</h1>
             <p className='text-lg lg:p-3 lg:mt-5'>The correct answer was:</p>
             <p className='text-lg lg:p-3 font-bold'> {answerArr} </p>
-            <button className='h-[5vh] w-[16vh] text-white text-lg lg:text-sm rounded-lg mt-3 lg:mt-6 bg-black' onClick={onNextWordClick}>Next Word</button>
+            <div className='justify-self-center'>
+              <button className='h-[5vh] w-[16vh] text-white text-lg lg:text-sm rounded-lg mt-3 lg:mt-6 bg-black' onClick={onNextWordClick}>Next Word</button>
+            </div>
           </div>
         }
       </div>
